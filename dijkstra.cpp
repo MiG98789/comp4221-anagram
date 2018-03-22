@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <queue>
 #include <utility>
@@ -12,7 +12,8 @@
 
 using namespace std;
 
-map<string, double> d;
+unordered_map<string, double> d;
+unordered_map<string, bool> seen;
 
 typedef pair<string, double> Node;
 typedef vector<Node> Anavec;
@@ -28,7 +29,7 @@ Anavec getTopAnagrams(const string &word) {
     };
     priority_queue<Node, Anavec, NodeGreater> pq;
 
-    for (char letter : word) {    
+    for (char letter : word) {
         string sLetter = string(1, letter);
         pq.push(Node(sLetter, d[sLetter]));
     }
@@ -36,6 +37,10 @@ Anavec getTopAnagrams(const string &word) {
     while (anagrams.size() < 5 && !pq.empty()) {
         Node minNode = pq.top();
         pq.pop();
+        
+        if (seen[minNode.first]) {
+            continue;
+        }
 
         string subword = word;
         for (char letter : minNode.first) {
@@ -62,6 +67,8 @@ Anavec getTopAnagrams(const string &word) {
                 pq.push(Node(newName, minNode.second + d[newName.substr(length - 1, 1) + "|" + newName.substr(length - 2, 1)]));
             }
         }
+
+        seen[minNode.first] = true;
     }
 
     sort(anagrams.begin(), anagrams.end(), [&](const Node &a, const Node &b)->bool{ return a.second < b.second; });
@@ -92,11 +99,9 @@ int main(int argc, char** argv) {
 
     // Get results
     Anavec results = getTopAnagrams(input);
-    cout << results[0].first << " " << results[0].second << endl;
-    cout << results[1].first << " " << results[1].second << endl;
-    cout << results[2].first << " " << results[2].second << endl;
-    cout << results[3].first << " " << results[3].second << endl;
-    cout << results[4].first << " " << results[4].second << endl;
+    for (Node result : results) {
+        cout << result.first << " " << result.second << endl;
+    }
 
     return 0;
 }
