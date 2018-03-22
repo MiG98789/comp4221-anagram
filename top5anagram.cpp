@@ -46,7 +46,7 @@ Anavec getTopAnagrams(const string &word) {
         string subword = word;
         for (char letter : minNode.first) {
             string sLetter = string(1, letter);
-            for (size_t i = 0, length = subword.length(); i < length; i++) {
+            for (size_t i = 0, length = subword.length(); i < length; ++i) {
                 if (subword.substr(i, 1) == sLetter) {
                     subword.erase(i, 1);
                     break;
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     ifstream file("unibigram_entropies.txt");
     string line;
     while (file >> line) {
-        for (size_t i = 0, length = line.length(); i < length; i++) {
+        for (size_t i = 0, length = line.length(); i < length; ++i) {
             if (line.substr(i, 1) == ",") {
                 double prob = stod(line.substr(i + 1, length - i));
                 
