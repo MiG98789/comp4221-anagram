@@ -90,9 +90,8 @@ int main(int argc, char** argv) {
         for (int j = 0; j < 26; j++) {
             string secondBigram(1, 'a' + j);
             string bigram = firstBigram + secondBigram;
-            string condProb = secondBigram + "|" + firstBigram;
-            p[condProb] = 1.0*c[bigram]/totalBigramCount[firstBigram + "0"];
-            d[condProb] = -log2(p[condProb]);
+            p[bigram] = 1.0*c[bigram]/totalBigramCount[firstBigram + "0"];
+            d[bigram] = -log2(p[bigram]);
         }
     }
     

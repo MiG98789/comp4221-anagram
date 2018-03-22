@@ -12,7 +12,7 @@
 
 using namespace std;
 
-unordered_map<string, double> d;
+double d[702];
 unordered_map<string, bool> seen;
 
 typedef pair<string, double> Node;
@@ -20,6 +20,7 @@ typedef vector<Node> Anavec;
 
 Anavec getTopAnagrams(const string &word) {
     Anavec anagrams;
+    anagrams.reserve(5);
 
     // Dijkstra
     struct NodeGreater {
@@ -31,13 +32,13 @@ Anavec getTopAnagrams(const string &word) {
 
     for (char letter : word) {
         string sLetter = string(1, letter);
-        pq.push(Node(sLetter, d[sLetter]));
+        pq.push(Node(sLetter, d[letter - 'a']));
     }
 
     while (anagrams.size() < 5 && !pq.empty()) {
         Node minNode = pq.top();
         pq.pop();
-        
+
         if (seen[minNode.first]) {
             continue;
         }
@@ -54,17 +55,14 @@ Anavec getTopAnagrams(const string &word) {
         }
 
         if (subword == "") {
-            Node toInsert(minNode.first, minNode.second);
-            if (find(anagrams.begin(), anagrams.end(), toInsert) == anagrams.end()) {
-                anagrams.push_back(toInsert);
-            }
+            anagrams.push_back(Node(minNode.first, minNode.second));
         } else {
             for (char letter : subword) {
                 string newName = minNode.first + letter;
 
                 // Goodness = d(e0) + d(e1|e0) + d(e2|e1) + ... + d(eT-1|eT-2)
                 int length = newName.length();
-                pq.push(Node(newName, minNode.second + d[newName.substr(length - 1, 1) + "|" + newName.substr(length - 2, 1)]));
+                pq.push(Node(newName, minNode.second + d[(newName[length - 2] - 'a' + 1)*26 + (newName[length - 1] - 'a')]));
             }
         }
 
@@ -91,7 +89,16 @@ int main(int argc, char** argv) {
     while (file >> line) {
         for (size_t i = 0, length = line.length(); i < length; i++) {
             if (line.substr(i, 1) == ",") {
-                d[line.substr(0,i)] = stod(line.substr(i + 1, length - i));
+                double prob = stod(line.substr(i + 1, length - i));
+                
+                if (i == 1) {
+                    // Unigram
+                    d[line[0] - 'a'] = prob;
+                } else {
+                    // Bigram
+                    d[(line[0] - 'a' + 1)*26 + (line[1] - 'a')] = prob;
+                }
+
                 break;
             }
         }
