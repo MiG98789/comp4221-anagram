@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <unordered_map>
 #include <string>
 #include <queue>
 #include <utility>
@@ -13,7 +12,7 @@
 using namespace std;
 
 double d[702];
-unordered_map<string, bool> seen;
+int letterCounts[26];
 
 typedef pair<string, double> Node;
 typedef vector<Node> Anavec;
@@ -21,6 +20,8 @@ typedef vector<Node> Anavec;
 Anavec getTopAnagrams(const string &word) {
     Anavec anagrams;
     anagrams.reserve(5);
+    int anagramSize = 0;
+    const int wordLength = word.length();
 
     // Dijkstra
     struct NodeGreater {
@@ -31,42 +32,48 @@ Anavec getTopAnagrams(const string &word) {
     priority_queue<Node, Anavec, NodeGreater> pq;
 
     for (char letter : word) {
-        string sLetter = string(1, letter);
-        pq.push(Node(sLetter, d[letter - 'a']));
+        ++letterCounts[letter - 'a'];
     }
 
-    while (anagrams.size() < 5 && !pq.empty()) {
+    for (int i = 0; i < 26; ++i) { 
+        if (letterCounts[i] > 0) {
+            Node tempNode(string(1, (char)(i + 'a')), d[i]);
+            pq.push(move(tempNode));
+        }
+    }
+
+    while (anagramSize < 5 && !pq.empty()) {
         Node minNode = pq.top();
         pq.pop();
 
-        if (seen[minNode.first]) {
-            continue;
-        }
+        if (minNode.first.length() == wordLength) {
+            anagrams.push_back(Node(minNode.first, minNode.second));
+            ++anagramSize;
+        } else {
+            for (int i = 0; i < 26; ++i) {
+                letterCounts[i] = 0;
+            }
 
-        string subword = word;
-        for (char letter : minNode.first) {
-            string sLetter = string(1, letter);
-            for (size_t i = 0, length = subword.length(); i < length; ++i) {
-                if (subword.substr(i, 1) == sLetter) {
-                    subword.erase(i, 1);
-                    break;
+            for (char letter : word) {
+                ++letterCounts[letter - 'a'];
+            }
+
+
+            for (char letter : minNode.first) {
+                --letterCounts[letter - 'a'];
+            }
+
+            for (int i = 0; i < 26; ++i) {
+                if (letterCounts[i] > 0) {
+                    string newName = minNode.first + char(i + 'a');
+                    int length = newName.length();
+
+                    // Goodness = d(e0) + d(e1|e0) + d(e2|e1) + ... + d(eT-1|eT-2)
+                    Node tempNode(newName, minNode.second + d[(newName[length - 2] - 'a' + 1)*26 + (newName[length - 1] - 'a')]);
+                    pq.push(move(tempNode));
                 }
             }
         }
-
-        if (subword == "") {
-            anagrams.push_back(Node(minNode.first, minNode.second));
-        } else {
-            for (char letter : subword) {
-                string newName = minNode.first + letter;
-
-                // Goodness = d(e0) + d(e1|e0) + d(e2|e1) + ... + d(eT-1|eT-2)
-                int length = newName.length();
-                pq.push(Node(newName, minNode.second + d[(newName[length - 2] - 'a' + 1)*26 + (newName[length - 1] - 'a')]));
-            }
-        }
-
-        seen[minNode.first] = true;
     }
 
     sort(anagrams.begin(), anagrams.end(), [&](const Node &a, const Node &b)->bool{ return a.second < b.second; });
@@ -90,7 +97,7 @@ int main(int argc, char** argv) {
         for (size_t i = 0, length = line.length(); i < length; ++i) {
             if (line.substr(i, 1) == ",") {
                 double prob = stod(line.substr(i + 1, length - i));
-                
+
                 if (i == 1) {
                     // Unigram
                     d[line[0] - 'a'] = prob;
