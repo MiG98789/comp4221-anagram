@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
@@ -12,7 +13,7 @@
 using namespace std;
 
 double d[702];
-int letterCounts[26];
+array<char, 26> letterCounts;
 
 typedef pair<string, double> Node;
 typedef vector<Node> Anavec;
@@ -42,29 +43,21 @@ Anavec getTopAnagrams(const string &word) {
         }
     }
 
-    while (anagramSize < 5 && !pq.empty()) {
+    while (anagrams.size() < 5 && !pq.empty()) {
         Node minNode = pq.top();
         pq.pop();
 
         if (minNode.first.length() == wordLength) {
-            anagrams.push_back(Node(minNode.first, minNode.second));
-            ++anagramSize;
+            anagrams.push_back(move(Node(minNode.first, minNode.second)));
         } else {
-            for (int i = 0; i < 26; ++i) {
-                letterCounts[i] = 0;
-            }
-
-            for (char letter : word) {
-                ++letterCounts[letter - 'a'];
-            }
-
+            array<char, 26> tempLetterCounts = letterCounts;
 
             for (char letter : minNode.first) {
-                --letterCounts[letter - 'a'];
+                --tempLetterCounts[letter - 'a'];
             }
 
             for (int i = 0; i < 26; ++i) {
-                if (letterCounts[i] > 0) {
+                if (tempLetterCounts[i] > 0) {
                     string newName = minNode.first + char(i + 'a');
                     int length = newName.length();
 
@@ -117,5 +110,5 @@ int main(int argc, char** argv) {
         cout << result.first << " " << result.second << endl;
     }
 
-    return 0;
+    quick_exit(0);
 }
